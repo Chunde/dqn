@@ -80,6 +80,8 @@ local screen, reward, terminal = game_env:getState()
 print("Iteration ..", step)
 while step < opt.steps do
     step = step + 1
+    --这里agent会返回当前的动作index，及reward, 还有画面，是否已经结束的标示
+    --这个perceive应该是游戏的接口，所以找不到
     local action_index = agent:perceive(reward, screen, terminal)
 
     -- game over? get next game!

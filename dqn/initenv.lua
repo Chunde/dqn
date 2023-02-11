@@ -129,7 +129,7 @@ function setup(_opt)
     if not _opt.agent_params.state_dim then
         _opt.agent_params.state_dim = gameEnv:nObsFeature()
     end
-
+    --dqn这个变量在哪里被赋值的呢？
     local agent = dqn[_opt.agent](_opt.agent_params)
 
     if opt.verbose >= 1 then
