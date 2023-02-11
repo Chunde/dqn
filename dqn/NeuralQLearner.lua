@@ -300,6 +300,7 @@ end
 
 function nql:perceive(reward, rawstate, terminal, testing, testing_ep)
     -- Preprocess state (will be set to nil if terminal)
+    -- preproc 将调用Scale.lua里的forward
     local state = self:preprocess(rawstate):float()
     local curState
 
