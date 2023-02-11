@@ -191,6 +191,7 @@ function nql:getQUpdate(args)
     -- to avoid unnecessary calls (we only need 2).
 
     -- delta = r + (1-terminal) * gamma * max_a Q(s2, a) - Q(s, a)
+    -- 判断游戏是否结束
     term = term:clone():float():mul(-1):add(1)
 
     local target_q_net
