@@ -4,7 +4,8 @@
         "ngx"
     ],
     "Lua.workspace.library": [
-        "${3rd}/OpenResty/library"
+        "${3rd}/OpenResty/library",
+        "${3rd}/lfs/library"
     ],
     "Lua.runtime.version": "LuaJIT"
 }
