@@ -58,6 +58,7 @@ function create_network(args)
     end
 
     -- add the last fully connected layer (to actions)
+    --所以最后一层输出的是第一个动作的Q值吧
     net:add(nn.Linear(last_layer_size, args.n_actions))
 
     if args.gpu >=0 then

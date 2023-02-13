@@ -183,6 +183,7 @@ function nql:getQUpdate(args)
 
     s = args.s
     a = args.a
+    --r只是当前状态的reward，是游戏画面看到的分数或分数调整后的值，即除于某个固定的分母
     r = args.r
     s2 = args.s2
     term = args.term
@@ -202,6 +203,7 @@ function nql:getQUpdate(args)
     end
 
     -- Compute max_a Q(s_2, a).
+    --计算第一个S2状态的最大Q值，这里S2是一组状态数组
     q2_max = target_q_net:forward(s2):float():max(2)
 
     -- Compute q2 = (1-terminal) * gamma * max_a Q(s2, a)
@@ -212,22 +214,28 @@ function nql:getQUpdate(args)
     if self.rescale_r then
         delta:div(self.r_max)
     end
+    --整个reward加上下一状态的reward
     delta:add(q2)
 
-    -- q = Q(s,a)
+    -- q = Q(s,a)，当前状态所第个动作的所有Q值
     local q_all = self.network:forward(s):float()
     q = torch.FloatTensor(q_all:size(1))
     for i=1,q_all:size(1) do
-        q[i] = q_all[i][a[i]]
+        q[i] = q_all[i][a[i]] --抽出每个当前状态的所选的动作的Q值
     end
+    --然后从detal中减去，就得到第一个状态变化的reward增加值
     delta:add(-1, q)
 
+    --进行reward clip，有些游戏可能不需要
     if self.clip_delta then
         delta[delta:ge(self.clip_delta)] = self.clip_delta
         delta[delta:le(-self.clip_delta)] = -self.clip_delta
     end
 
     local targets = torch.zeros(self.minibatch_size, self.n_actions):float()
+    --以下的target数据结构将存储第一个状态s的目标值
+    --这个值是在对应选择的action动作位置的Q值增量
+    --其它非被选的actio的Q值设定为0，
     for i=1,math.min(self.minibatch_size,a:size(1)) do
         targets[i][a[i]] = delta[i]
     end
@@ -247,7 +255,9 @@ function nql:qLearnMinibatch()
 
     local targets, delta, q2_max = self:getQUpdate{s=s, a=a, r=r, s2=s2,
         term=term, update_qmax=true}
-
+    --上面的delta最后没用到，因为它已经在target数组里面
+    --不要和下面的self.delta混在一起
+    --好的，看明白了。现在是早上4：08,可以继续睡觉了
     -- zero gradients of parameters
     self.dw:zero()
 
@@ -297,13 +307,17 @@ function nql:compute_validation_statistics()
     self.tderr_avg = delta:clone():abs():mean()
 end
 
-
+--顺便说一下LUA的一个语法，冒号会自动把self当第一个参数传进函数
+--The colon is for implementing methods that pass self as the first parameter.
+--So x:bar(3,4)should be the same as x.bar(x,3,4)
 function nql:perceive(reward, rawstate, terminal, testing, testing_ep)
     -- Preprocess state (will be set to nil if terminal)
     -- preproc 将调用Scale.lua里的forward
     local state = self:preprocess(rawstate):float()
     local curState
 
+    --限定最大和最小reward的大小，在默认情况下max_reward=1
+    --min_reward = -1
     if self.max_reward then
         reward = math.min(reward, self.max_reward)
     end
@@ -392,6 +406,7 @@ function nql:greedy(state)
     end
 
     local q = self.network:forward(state):float():squeeze()
+    --这里将得到数个Q值，分别对应不同动作，所以是一个数组 
     local maxq = q[1]
     local besta = {1}
 
@@ -405,7 +420,7 @@ function nql:greedy(state)
         end
     end
     self.bestq = maxq
-
+    -- 在多个最优动作中随机选一个，一般只有一个最优的
     local r = torch.random(1, #besta)
 
     self.lastAction = besta[r]
