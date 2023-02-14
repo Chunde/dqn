@@ -262,6 +262,10 @@ function nql:qLearnMinibatch()
     self.dw:zero()
 
     -- get new gradient
+    -- target是来自s的loss,即 y - y'，就是期望值与当前实际值的差别
+    -- 早上似乎看懂了，不过回头看时，发现这点还有疑问就再回头看一下
+    -- 没找到完好的文档，看其它网友的解释。应该要在torch 7的源码里
+    -- 02132023 21：18
     self.network:backward(s, targets)
 
     -- add weight cost to gradient
